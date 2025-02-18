@@ -1,0 +1,63 @@
+# Flutter/Dart
+**/build/
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/pubspec.lock
+
+# IDE
+**/.idea/
+**/.vscode/
+**/*.iml
+**/.project
+**/.classpath
+**/.settings/
+
+# Node.js (server)
+server/node_modules/
+server/dist/
+server/.env
+server/npm-debug.log
+server/yarn-debug.log
+server/yarn-error.log
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# API Keys and Secrets
+**/*.env
+**/google-services.json
+**/GoogleService-Info.plist
+**/key.properties
+
+# iOS specific
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Debug.xcconfig
+**/ios/Flutter/Release.xcconfig
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+
+# Android specific
+**/android/.gradle/
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/local.properties
+**/android/**/gradle-wrapper.jar
+**/android/captures/
+
+# Web related
+**/lib/generated_plugin_registrant.dart
+
+# Test coverage
+**/coverage/

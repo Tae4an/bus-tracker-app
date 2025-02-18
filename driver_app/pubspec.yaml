@@ -1,0 +1,30 @@
+name: driver_app
+description: "버스 위치 전송 기사용 앱"
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  shared:
+    path: ../shared    # 상대 경로로 shared 패키지 참조
+    
+  cupertino_icons: ^1.0.8      # iOS 스타일 아이콘
+  google_maps_flutter: ^2.10.0  # 구글 맵 연동
+  provider: ^6.1.2             # 상태 관리
+  socket_io_client: ^3.0.2     # 실시간 위치 전송
+  http: ^1.3.0                 # HTTP 통신
+  shared_preferences: ^2.5.2    # 로컬 데이터 저장
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0        # 코드 품질 검사
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/           # 이미지 리소스
