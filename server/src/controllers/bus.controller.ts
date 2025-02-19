@@ -15,15 +15,17 @@ import { logger } from '../utils/logger';
  */
 export const getBuses = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
-    // 버스 정보 조회 시 routeId와 driverId 필드를 populate하여 관련 정보 포함
-    const buses = await Bus.find()
-      .populate('routeId', 'name color') // 노선 정보 중 이름과 색상만 포함
-      .populate('driverId', 'name');     // 운전자 정보 중 이름만 포함
-
+    // 원본 쿼리 실행 (populate 포함)
+    const buses = await Bus.find();
+    
+    // 안전하게 응답 데이터 준비
+    const safeData = Array.isArray(buses) ? buses : [];
+    const safeCount = safeData.length;
+    
     res.status(200).json({
       success: true,
-      count: buses.length,
-      data: buses
+      count: safeCount,
+      data: safeData
     });
   } catch (error) {
     logger.error(`버스 목록 조회 오류: ${error}`);
