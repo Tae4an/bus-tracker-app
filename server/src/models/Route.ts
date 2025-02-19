@@ -90,7 +90,7 @@ routeSchema.index({ active: 1 });
 
 // 정류장 수 가상 필드
 routeSchema.virtual('stopCount').get(function (this: IRoute) {
-  return this.stops.length;
+  return this.stops?.length || 0;
 });
 
 export default mongoose.model<IRoute>('Route', routeSchema);

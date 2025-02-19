@@ -77,11 +77,11 @@ stopSchema.index({ name: 'text' }); // 텍스트 검색을 위한 인덱스
 
 // 가상 필드: 위도/경도
 stopSchema.virtual('latitude').get(function (this: IStop) {
-  return this.location.coordinates[1];
+  return this.location?.coordinates?.[1];
 });
 
 stopSchema.virtual('longitude').get(function (this: IStop) {
-  return this.location.coordinates[0];
+  return this.location?.coordinates?.[0];
 });
 
 export default mongoose.model<IStop>('Stop', stopSchema);

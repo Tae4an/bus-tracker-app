@@ -92,10 +92,10 @@ busSchema.index({ plateNumber: 1 });
 
 // 버스 정보에 현재 위치 정보 추가 가상 필드
 busSchema.virtual('location').get(function (this: IBus) {
-  if (this.lastLocation && this.lastLocation.coordinates) {
+  if (this.lastLocation?.coordinates) {
     return {
       longitude: this.lastLocation.coordinates[0],
-      latitude: this.lastLocation.coordinates[1],
+      latitude: this.lastLocation.coordinates[1]
     };
   }
   return null;
