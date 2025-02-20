@@ -4,6 +4,102 @@
  * 버스 위치 실시간 업데이트, 구독 관리 등 실시간 통신 기능을 처리
  * 모든 소켓 연결은 인증을 거쳐야 하며, 권한에 따라 기능이 제한됨
  */
+/**
+ * @swagger
+ * tags:
+ *   name: Realtime
+ *   description: 실시간 통신 API (Socket.IO)
+ */
+
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     socketAuth:
+ *       type: apiKey
+ *       in: header
+ *       name: Authorization
+ *       description: Socket.IO 연결 시 인증 토큰
+ */
+
+/**
+ * @swagger
+ * /socket.io:
+ *   get:
+ *     summary: Socket.IO 연결
+ *     tags: [Realtime]
+ *     security:
+ *       - socketAuth: []
+ *     description: |
+ *       Socket.IO 서버에 연결합니다. 연결 시 인증 토큰이 필요합니다.
+ *       
+ *       # 이벤트
+ *       
+ *       ## 서버로 전송하는 이벤트
+ *       
+ *       ### updateBusLocation
+ *       버스 위치 업데이트
+ *       ```
+ *       {
+ *         busId: string,
+ *         latitude: number,
+ *         longitude: number,
+ *         speed?: number,
+ *         heading?: number,
+ *         accuracy?: number
+ *       }
+ *       ```
+ *       
+ *       ### subscribeToBus
+ *       특정 버스 구독
+ *       ```
+ *       busId: string
+ *       ```
+ *       
+ *       ### unsubscribeFromBus
+ *       특정 버스 구독 취소
+ *       ```
+ *       busId: string
+ *       ```
+ *       
+ *       ## 서버에서 수신하는 이벤트
+ *       
+ *       ### busLocationUpdated
+ *       버스 위치 업데이트 수신
+ *       ```
+ *       {
+ *         busId: string,
+ *         latitude: number,
+ *         longitude: number,
+ *         speed?: number,
+ *         heading?: number,
+ *         accuracy?: number,
+ *         timestamp: Date
+ *       }
+ *       ```
+ *       
+ *       ### locationUpdateSuccess
+ *       위치 업데이트 성공 확인
+ *       ```
+ *       {
+ *         busId: string,
+ *         timestamp: Date
+ *       }
+ *       ```
+ *       
+ *       ### error
+ *       오류 메시지 수신
+ *       ```
+ *       {
+ *         message: string
+ *       }
+ *       ```
+ *     responses:
+ *       101:
+ *         description: Switching Protocols to WebSocket
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ */
 import { Server as SocketServer, Socket } from 'socket.io';
 import jwt from 'jsonwebtoken';
 import { Bus, LocationRecord, UserRole } from '../models';

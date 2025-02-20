@@ -2,6 +2,42 @@
  * 인증 미들웨어
  * JWT 토큰 검증과 권한 관리를 처리
  */
+/**
+ * @swagger
+ * components:
+ *   securitySchemes:
+ *     bearerAuth:
+ *       type: http
+ *       scheme: bearer
+ *       bearerFormat: JWT
+ *   responses:
+ *     UnauthorizedError:
+ *       description: 인증 오류
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               error:
+ *                 type: string
+ *                 example: 이 리소스에 접근할 권한이 없습니다
+ *     ForbiddenError:
+ *       description: 권한 없음
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               success:
+ *                 type: boolean
+ *                 example: false
+ *               error:
+ *                 type: string
+ *                 example: 이 리소스에 접근할 권한이 없습니다
+ */
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { User, UserRole } from '../models';
@@ -20,6 +56,11 @@ declare global {
  * JWT 토큰 검증 및 사용자 설정 미들웨어
  * 요청 헤더나 쿠키에서 토큰을 추출하고 검증한 후, 
  * 해당 사용자 정보를 req.user에 저장
+ */
+/**
+ * @swagger
+ * security:
+ *   - bearerAuth: []
  */
 export const protect = async (
   req: Request,
@@ -91,6 +132,14 @@ export const protect = async (
  * 특정 역할을 가진 사용자만 접근을 허용
  * @param {...UserRole} roles - 허용할 사용자 역할 목록
  * @returns {Function} Express 미들웨어 함수
+ */
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     UserRole:
+ *       type: string
+ *       enum: [PASSENGER, DRIVER, ADMIN]
  */
 export const authorize = (...roles: UserRole[]) => {
   return (req: Request, res: Response, next: NextFunction): void => {

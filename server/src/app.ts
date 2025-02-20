@@ -16,7 +16,8 @@ import { connectDB } from './config/db';
 import { logger } from './utils/logger';
 import apiRoutes from './routes';
 import { initializeSocket } from './socket';
-
+import swaggerUi from 'swagger-ui-express';
+import { specs } from './config/swagger';
 // 환경 변수 로드
 dotenv.config();
 
@@ -25,6 +26,9 @@ dotenv.config();
  */
 const app: Express = express();
 const server = http.createServer(app);
+
+// Swagger 문서 라우트 설정
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 
 /**
  * Socket.IO 서버 설정
