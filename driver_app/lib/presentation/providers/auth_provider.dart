@@ -5,6 +5,7 @@ import 'package:driver_app/config/app_config.dart';
 import 'package:driver_app/core/api/auth_api.dart';
 import 'package:driver_app/data/models/user_model.dart';
 import 'package:flutter/foundation.dart';
+import 'package:shared/models/user_role.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared/models/auth_response.dart';
 
@@ -71,7 +72,7 @@ class AuthProvider with ChangeNotifier {
       final user = await _authApi.getUserProfile(_token!);
       
       // 기사 계정이 아닌 경우 오류 처리
-      if (user.role != 'DRIVER') {
+      if (user.role != UserRole.DRIVER) {
         throw Exception('기사 계정으로만 로그인할 수 있습니다.');
       }
       
@@ -99,13 +100,12 @@ class AuthProvider with ChangeNotifier {
       final AuthResponse response = await _authApi.login(email, password);
       
       // 기사 계정인지 확인
-      if (response.user.role != 'DRIVER') {
+      if (response.user.role != UserRole.DRIVER) {
         _errorMessage = '기사 계정으로만 로그인할 수 있습니다.';
         _status = AuthStatus.error;
         notifyListeners();
         return false;
       }
-      
       // 토큰 저장
       _token = response.token;
       await _secureStorage.write(key: AppConfig.tokenKey, value: _token);
@@ -117,6 +117,7 @@ class AuthProvider with ChangeNotifier {
       notifyListeners();
       return true;
     } catch (e) {
+      print('로그인 오류: $e');
       _errorMessage = '로그인에 실패했습니다. 다시 시도해주세요.';
       _status = AuthStatus.error;
       notifyListeners();
