@@ -58,9 +58,9 @@ class BusApi {
         ),
       );
       
-      return app_route.Route.fromJson(response.data['data']);
+      return app_route.Route.fromJson(response.data);
     } catch (e) {
-      throw Exception('노선 정보 조회 중 오류가 발생했습니다');
+      throw Exception('노선 정보 조회 중 오류가 발생했습니다: ${e.toString()}');
     }
   }
   

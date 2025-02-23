@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:shared/models/stop.dart';
 import 'schedule_entry.dart';
 
 part 'route.g.dart';
@@ -78,7 +79,8 @@ class Route extends Equatable {
   final String? description;
   
   /// 정류장 ID 목록 (순서대로)
-  final List<String> stops;
+  @JsonKey(defaultValue: [])
+  final List<Stop> stops;
   
   /// 요일별 시간표 목록
   final List<RouteSchedule>? schedules;
@@ -112,8 +114,25 @@ class Route extends Equatable {
   });
   
   /// JSON에서 Route 객체 생성
-  factory Route.fromJson(Map<String, dynamic> json) => _$RouteFromJson(json);
-  
+  factory Route.fromJson(Map<String, dynamic> json) {
+    return Route(
+      id: json['_id'] as String? ?? '',
+      name: json['name'] as String? ?? '',
+      description: json['description'] as String?,
+      stops: (json['stops'] as List<dynamic>?)
+          ?.map((e) => Stop.fromJson(e as Map<String, dynamic>))
+          .toList() 
+          ?? [],
+      schedules: (json['schedules'] as List<dynamic>?)
+          ?.map((e) => RouteSchedule.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      active: json['active'] as bool? ?? false,
+      color: json['color'] as String?,
+      fareAmount: (json['fareAmount'] as num?)?.toDouble(),
+      fareType: json['fareType'] as String?,
+      metadata: json['metadata'] as Map<String, dynamic>?,
+    );
+  }  
   /// Route 객체를 JSON으로 변환
   Map<String, dynamic> toJson() => _$RouteToJson(this);
   
@@ -136,7 +155,7 @@ class Route extends Equatable {
     String? id,
     String? name,
     String? description,
-    List<String>? stops,
+    List<Stop>? stops,
     List<RouteSchedule>? schedules,
     bool? active,
     String? color,
