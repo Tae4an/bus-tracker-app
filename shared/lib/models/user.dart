@@ -44,11 +44,13 @@ class User extends Equatable {
   final String? profileImageUrl;
   
   /// 계정 활성화 상태
+  @JsonKey(defaultValue: true)
   final bool isActive;
-  
+
   /// 계정 생성 일시
-  final DateTime createdAt;
-  
+  @JsonKey(defaultValue: null)
+  final DateTime? createdAt;
+    
   /// 마지막 로그인 일시
   final DateTime? lastLoginAt;
   
@@ -72,8 +74,31 @@ class User extends Equatable {
   });
   
   /// JSON에서 User 객체 생성
-  factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-  
+  factory User.fromJson(Map<String, dynamic> json) {
+    return User(
+      id: json['id'] ?? json['_id'] ?? '', // id와 _id 모두 체크
+      name: json['name'] ?? '',
+      email: json['email'] ?? '',
+      password: json['password'],
+      role: UserRoleExtension.fromJson(json['role']),
+      favoriteRoutes: (json['favoriteRoutes'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      favoriteStops: (json['favoriteStops'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      licenseNumber: json['licenseNumber'],
+      phoneNumber: json['phoneNumber'],
+      profileImageUrl: json['profileImageUrl'],
+      isActive: json['isActive'] ?? true,
+      createdAt: json['createdAt'] == null
+          ? null
+          : DateTime.parse(json['createdAt'] as String),
+      lastLoginAt: json['lastLoginAt'] == null
+          ? null
+          : DateTime.parse(json['lastLoginAt'] as String),
+    );
+  }  
   /// User 객체를 JSON으로 변환
   Map<String, dynamic> toJson() => _$UserToJson(this);
   
