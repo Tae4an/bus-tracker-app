@@ -27,7 +27,9 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDriverData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadDriverData();
+    });
   }
 
   // 기사 데이터 로드
@@ -41,12 +43,21 @@ class _HomeScreenState extends State<HomeScreen> {
       final driverProvider = Provider.of<DriverProvider>(context, listen: false);
 
       if (authProvider.user != null && authProvider.token != null) {
+        // 현재 로그인한 기사의 배정된 버스 로드
         await driverProvider.loadAssignedBus(
           authProvider.user!.id,
           authProvider.token!,
         );
       }
     } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('버스 정보 로드 실패: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
       AppLogger.error('기사 데이터 로드 오류: $e');
     } finally {
       if (mounted) {
@@ -57,27 +68,35 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+
   // 운행 시작 핸들러
   Future<void> _handleStartDriving() async {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final driverProvider = Provider.of<DriverProvider>(context, listen: false);
 
-    if (authProvider.token == null) return;
+    if (authProvider.token == null) {
+      AppLogger.error('인증 토큰이 없습니다.');
+      return;
+    }
 
-    final success = await driverProvider.startDriving(authProvider.token!);
+    try {
+      final success = await driverProvider.startDriving(authProvider.token!);
 
-    if (success && mounted) {
-      // 운행 화면으로 이동
-      final bus = driverProvider.assignedBus;
-      if (bus != null) {
-        Navigator.of(context).pushNamed(
-          AppRoutes.driving,
-          arguments: {
-            'busId': bus.id,
-            'routeId': bus.routeId,
-          },
-        );
+      if (success && mounted) {
+        // 운행 화면으로 이동
+        final bus = driverProvider.assignedBus;
+        if (bus != null) {
+          Navigator.of(context).pushNamed(
+            AppRoutes.driving,
+            arguments: {
+              'busId': bus.id,
+              'routeId': bus.routeId,
+            },
+          );
+        }
       }
+    } catch (e) {
+      AppLogger.error('운행 시작 중 오류: $e');
     }
   }
 
@@ -149,9 +168,8 @@ class _HomeScreenState extends State<HomeScreen> {
               _buildBusAssignmentSection(bus, route),
               const SizedBox(height: 24),
 
-              // 운행 액션 버튼
-              if (bus != null && driverProvider.drivingStatus != DrivingStatus.driving)
-                _buildActionButton(driverProvider),
+              // 운행 액션 버튼 
+              _buildActionButton(driverProvider),
             ],
           ),
         );
@@ -358,48 +376,117 @@ class _HomeScreenState extends State<HomeScreen> {
     // 버스 상태에 따른 버튼 설정
     String buttonText;
     IconData buttonIcon;
-    bool isEnabled;
+    Color buttonColor;
+    VoidCallback? onPressed;
 
-    switch (bus.status) {
-      case BusStatus.ACTIVE:
-        buttonText = '운행 계속하기';
-        buttonIcon = Icons.play_arrow;
-        isEnabled = true;
-        break;
-      case BusStatus.IDLE:
-        buttonText = '운행 시작하기';
-        buttonIcon = Icons.play_arrow;
-        isEnabled = true;
-        break;
-      case BusStatus.MAINTENANCE:
-        buttonText = '정비 중';
-        buttonIcon = Icons.build;
-        isEnabled = false;
-        break;
-      case BusStatus.OUT_OF_SERVICE:
-        buttonText = '운행 불가';
-        buttonIcon = Icons.not_interested;
-        isEnabled = false;
-        break;
+    if (driverProvider.isActivelyDriving) {
+      // 운행 중인 경우
+      buttonText = '운행 완료';
+      buttonIcon = Icons.check_circle;  // 아이콘 변경
+      buttonColor = Colors.green;       // 색상을 녹색으로 변경
+      onPressed = () => _handleFinishDriving();
+    } else {
+      // 운행 중이 아닌 경우
+      switch (bus.status) {
+        case BusStatus.ACTIVE:
+          buttonText = '운행 계속하기';
+          buttonIcon = Icons.play_arrow;
+          buttonColor = theme.colorScheme.primary;
+          onPressed = _handleStartDriving;
+          break;
+        case BusStatus.IDLE:
+          buttonText = '운행 시작하기';
+          buttonIcon = Icons.play_arrow;
+          buttonColor = theme.colorScheme.primary;
+          onPressed = _handleStartDriving;
+          break;
+        case BusStatus.MAINTENANCE:
+          buttonText = '정비 중';
+          buttonIcon = Icons.build;
+          buttonColor = Colors.grey;
+          onPressed = null;
+          break;
+        case BusStatus.OUT_OF_SERVICE:
+          buttonText = '운행 불가';
+          buttonIcon = Icons.not_interested;
+          buttonColor = Colors.grey;
+          onPressed = null;
+          break;
+      }
     }
 
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: ElevatedButton.icon(
-        onPressed: isEnabled ? _handleStartDriving : null,
+        onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: theme.colorScheme.primary,
-          foregroundColor: theme.colorScheme.onPrimary,
+          backgroundColor: buttonColor,
+          foregroundColor: Colors.white,
           disabledBackgroundColor: theme.colorScheme.onSurface.withOpacity(0.12),
           disabledForegroundColor: theme.colorScheme.onSurface.withOpacity(0.38),
         ),
         icon: Icon(buttonIcon),
         label: Text(
           buttonText,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
     );
+  }
+
+  // 운행 완료 처리
+  Future<void> _handleFinishDriving() async {
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final driverProvider = Provider.of<DriverProvider>(context, listen: false);
+    final bus = driverProvider.assignedBus;
+
+    // 버스 배정 여부 및 권한 확인
+    if (bus == null || bus.driverId != authProvider.user?.id) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('이 버스에 대한 권한이 없습니다'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    final result = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('운행 완료'),
+        content: const Text('오늘 운행을 완료하시겠습니까?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('취소'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('완료'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == true) {
+      try {
+        if (authProvider.token == null) return;
+        await driverProvider.completeDriving(authProvider.token!);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('운행 완료 처리 실패: ${e.toString()}'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    }
   }
 }

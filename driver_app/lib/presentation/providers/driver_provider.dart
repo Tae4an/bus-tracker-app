@@ -80,24 +80,28 @@ class DriverProvider with ChangeNotifier {
     }
   }
   
+  Future<bool> verifyBusAssignment(String busId, String token) async {
+    try {
+      final response = await _busApi.getAssignedBus(busId, token);
+      return response != null && response.id == busId;
+    } catch (e) {
+      return false;
+    }
+  }
+
   // 버스 상태 업데이트
   Future<bool> updateBusStatus(String busId, BusStatus status, String token) async {
-    _setLoading(true);
-    
-    try {
-      final updatedBus = await _busApi.updateBusStatus(busId, status, token);
-      _assignedBus = updatedBus;
-      _updateDrivingStatus();
-      return true;
-    } catch (e) {
-      _errorMessage = '버스 상태 업데이트 중 오류가 발생했습니다';
-      if (kDebugMode) {
-        print('버스 상태 업데이트 오류: $e');
-      }
-      return false;
-    } finally {
-      _setLoading(false);
+    // 먼저 권한 확인
+    final hasPermission = await verifyBusAssignment(busId, token);
+    if (!hasPermission) {
+      throw Exception('이 버스의 상태를 수정할 권한이 없습니다');
     }
+
+    // 권한이 있는 경우 상태 업데이트 진행
+    final updatedBus = await _busApi.updateBusStatus(busId, status, token);
+    _assignedBus = updatedBus;
+    _updateDrivingStatus();
+    return true;
   }
   
   // 운행 시작
