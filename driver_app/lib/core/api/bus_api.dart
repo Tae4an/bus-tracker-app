@@ -14,20 +14,25 @@ class BusApi {
   Future<Bus?> getAssignedBus(String driverId, String token) async {
     try {
       final response = await _dioClient.dio.get(
-        '/buses',
-        queryParameters: {'driverId': driverId},
+        '/buses/assigned/driver',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
       );
       
-      final List<dynamic> buses = response.data['data'];
-      if (buses.isNotEmpty) {
-        return Bus.fromJson(buses[0]);
+      if (response.data['success'] && response.data['data'] != null) {
+        // 중첩된 routeId 객체 처리
+        final data = Map<String, dynamic>.from(response.data['data']);
+        if (data['routeId'] is Map) {
+          // routeId가 객체인 경우 id 값만 추출
+          data['routeId'] = data['routeId']['id'];
+        }
+        return Bus.fromJson(data);
       }
       return null;
     } catch (e) {
-      throw Exception('배정된 버스 정보 조회 중 오류가 발생했습니다');
+      print('Error getting assigned bus: $e');
+      return null;
     }
   }
   
@@ -42,8 +47,13 @@ class BusApi {
         ),
       );
       
+      print('Server response success: ${response.data}');
       return Bus.fromJson(response.data['data']);
-    } catch (e) {
+    } on DioException catch (e) {
+      // 서버 에러 메시지가 있다면 그대로 사용
+      if (e.response?.data != null && e.response?.data['error'] != null) {
+        throw Exception(e.response?.data['error']);
+      }
       throw Exception('버스 상태 업데이트 중 오류가 발생했습니다');
     }
   }
