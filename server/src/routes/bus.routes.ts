@@ -17,13 +17,107 @@ import {
   createBus,
   updateBus,
   deleteBus,
-  updateBusStatus
+  updateBusStatus,
+  getAssignedBus,
+  assignDriver
 } from '../controllers/bus.controller';
 import { protect, authorize } from '../middleware/auth.middleware';
 import { UserRole } from '../models';
 import { asyncHandler } from '../utils/asyncHandler';
 
 const router = Router();
+
+/**
+ * @swagger
+ * /api/buses/assigned/driver:
+ *   get:
+ *     summary: 현재 로그인한 기사가 담당하는 버스 조회
+ *     tags: [Buses]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: 담당 버스 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Bus'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       404:
+ *         $ref: '#/components/responses/NotFoundError'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.get('/assigned/driver', protect, getAssignedBus);
+
+/**
+ * @swagger
+ * /api/buses/{id}/assign:
+ *   put:
+ *     summary: 버스에 기사 할당 (관리자용)
+ *     tags: [Buses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: 버스 ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - driverId
+ *             properties:
+ *               driverId:
+ *                 type: string
+ *                 example: '60d21b4667d0d8992e610c87'
+ *                 description: 할당할 기사 사용자 ID
+ *     responses:
+ *       200:
+ *         description: 기사 할당 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Bus'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             example:
+ *               success: false
+ *               error: '유효하지 않은 드라이버 ID 형식'
+ *       401:
+ *         $ref: '#/components/responses/UnauthorizedError'
+ *       403:
+ *         $ref: '#/components/responses/ForbiddenError'
+ *       404:
+ *         description: 리소스 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *             examples:
+ *               busNotFound:
+ *                 value:
+ *                   success: false
+ *                   error: '해당 ID의 버스를 찾을 수 없습니다'
+ *               userNotFound:
+ *                 value:
+ *                   success: false
+ *                   error: '해당 ID의 사용자를 찾을 수 없습니다'
+ *       500:
+ *         $ref: '#/components/responses/ServerError'
+ */
+router.put('/:id/assign', protect, authorize(UserRole.ADMIN), assignDriver);
 
 // 공개 접근 라우트 - 조회 작업
 /**

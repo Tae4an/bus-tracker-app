@@ -4,7 +4,7 @@
  * 버스 관련 CRUD 작업 및 상태 관리 기능을 처리
  */
 import { Request, Response, NextFunction } from 'express';
-import { Bus, Route } from '../models';
+import { Bus, Route, User } from '../models';
 import { logger } from '../utils/logger';
 
 /**
@@ -236,6 +236,83 @@ export const deleteBus = async (req: Request, res: Response, next: NextFunction)
     });
   } catch (error) {
     logger.error(`버스 삭제 오류: ${error}`);
+    res.status(500).json({
+      success: false,
+      error: '서버 오류가 발생했습니다'
+    });
+  }
+};
+
+/**
+ * 기사에게 배정된 버스 조회
+ * @route   GET /api/buses/assigned/driver
+ * @access  Private (Driver) - 로그인한 기사만 접근 가능
+ * @returns {object} 기사에게 배정된 버스 정보
+ */
+export const getAssignedBus = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // 현재 로그인한 기사의 ID로 배정된 버스 조회
+    const bus = await Bus.findOne({ driverId: req.user.id })
+      .populate('routeId', 'name stops schedule color');  // 노선 정보도 함께 가져오기
+
+    res.status(200).json({
+      success: true,
+      data: bus  // bus가 null이어도 그대로 반환
+    });
+  } catch (error) {
+    logger.error(`배정된 버스 조회 오류: ${error}`);
+    res.status(500).json({
+      success: false,
+      error: '서버 오류가 발생했습니다'
+    });
+  }
+};
+
+/**
+ * 버스에 기사 배정
+ * @route PUT /api/buses/:id/assign
+ * @access Private (Admin)
+ */
+export const assignDriver = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    const { driverId } = req.body;
+    
+    // 버스 존재 여부 확인
+    const bus = await Bus.findById(req.params.id);
+    if (!bus) {
+      res.status(404).json({
+        success: false,
+        error: '해당 ID의 버스를 찾을 수 없습니다'
+      });
+      return;
+    }
+
+    // 기사 존재 여부 확인
+    const driver = await User.findById(driverId);
+    if (!driver || driver.role !== 'DRIVER') {
+      res.status(404).json({
+        success: false,
+        error: '유효한 기사 ID가 아닙니다'
+      });
+      return;
+    }
+
+    // 기사 배정 업데이트
+    const updatedBus = await Bus.findByIdAndUpdate(
+      req.params.id,
+      { driverId },
+      {
+        new: true,
+        runValidators: true
+      }
+    );
+
+    res.status(200).json({
+      success: true,
+      data: updatedBus
+    });
+  } catch (error) {
+    logger.error(`기사 배정 오류: ${error}`);
     res.status(500).json({
       success: false,
       error: '서버 오류가 발생했습니다'
