@@ -43,38 +43,43 @@ class AppConfig {
   static String get apiBaseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://localhost:8080/api';
+        return _isAndroid() ? 'http://10.0.2.2:8080/api' : 'http://localhost:8080/api';
       case Environment.staging:
         return 'https://staging-api.example.com/api';
       case Environment.production:
         return 'https://api.example.com/api';
     }
   }
-  
+ 
   // 웹소켓 URL 설정
   static String get socketUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://localhost:8080';
+        return _isAndroid() ? 'http://10.0.2.2:8080' : 'http://localhost:8080';
       case Environment.staging:
         return 'https://staging-api.example.com';
       case Environment.production:
         return 'https://api.example.com';
     }
   }
-  
+
   // 업로드용 이미지 URL (프로필 이미지 등)
   static String get imageBaseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://localhost:8080/uploads';
+        return _isAndroid() ? 'http://10.0.2.2:8080/uploads' : 'http://localhost:8080/uploads';
       case Environment.staging:
         return 'https://staging-api.example.com/uploads';
       case Environment.production:
         return 'https://api.example.com/uploads';
     }
   }
-  
+
+  // Android 플랫폼 확인
+  static bool _isAndroid() {
+    return defaultTargetPlatform == TargetPlatform.android;
+  }
+
   // 위치 추적 설정
   static const locationUpdateIntervalSeconds = 10; // 위치 업데이트 간격(초)
   static const minimumDistanceChangeMeters = 10.0; // 최소 위치 변경 거리(미터)
