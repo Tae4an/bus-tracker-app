@@ -64,3 +64,4 @@ flutter:
   assets:
     - assets/images/            # 이미지 리소스
     - assets/icons/             # 아이콘 리소스
+    - .env                      # .env 파일

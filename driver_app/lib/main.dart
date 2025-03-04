@@ -11,11 +11,15 @@ import 'package:driver_app/routes/app_router.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart'; 
 
 void main() async {
   // Flutter 엔진 초기화 및 위젯 바인딩 보장
   WidgetsFlutterBinding.ensureInitialized();
   
+    // .env 파일 로드
+  await dotenv.load(fileName: ".env");
+
   // 앱 환경 설정 로드
   await AppConfig.initialize();
   
